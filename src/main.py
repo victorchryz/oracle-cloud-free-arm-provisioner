@@ -26,6 +26,7 @@ OCT_FREE_AD = os.getenv("OCT_FREE_AD", "").strip()
 DISPLAY_NAME = os.getenv("DISPLAY_NAME", "").strip()
 WAIT_TIME = int(os.getenv("REQUEST_WAIT_TIME_SECS", "60").strip())
 AD_WAIT_TIME = int(os.getenv("AD_WAIT_TIME_SECS", "20").strip())
+RATE_LIMIT_WAIT_TIME = int(os.getenv("RATE_LIMIT_WAIT_TIME_SECS", "120").strip())
 SSH_PUBLIC_KEY_FILE = os.getenv("SSH_PUBLIC_KEY_FILE", "").strip()
 OCI_IMAGE_ID = os.getenv("OCI_IMAGE_ID", None).strip() if os.getenv("OCI_IMAGE_ID") else None
 OCI_COMPUTE_SHAPE = os.getenv("OCI_COMPUTE_SHAPE", ARM_SHAPE).strip()
@@ -271,24 +272,28 @@ def launch_instance():
                     )
                     if instance_exist_flag:
                         break
-            except oci.exceptions.ServiceError as srv_err:
-                if srv_err.code == "LimitExceeded":
-                    instance_exist_flag = check_instance_state_and_write(
-                        oci_tenancy, OCI_COMPUTE_SHAPE
-                    )
-                    if instance_exist_flag:
-                        sys.exit()
-                data = {
-                    "status": srv_err.status,
-                    "code": srv_err.code,
-                    "message": srv_err.message,
-                }
-                print(f"Error: {data['code']} - {data['message']}")
-                send_telegram_message(
-                    f"❗️ Error launching instance on {ad}: <code>{data['code']}</code>\n"
-                    f"Status: {data['status']}\n"
-                    f"Message: {data['message']}"
+except oci.exceptions.ServiceError as srv_err:
+            if srv_err.status == 429:
+                print(f"Rate limited (429). Waiting {RATE_LIMIT_WAIT_TIME}s...")
+                time.sleep(RATE_LIMIT_WAIT_TIME)
+                continue
+            if srv_err.code == "LimitExceeded":
+                instance_exist_flag = check_instance_state_and_write(
+                    oci_tenancy, OCI_COMPUTE_SHAPE
                 )
+                if instance_exist_flag:
+                    sys.exit()
+            data = {
+                "status": srv_err.status,
+                "code": srv_err.code,
+                "message": srv_err.message,
+            }
+            print(f"Error: {data['code']} - {data['message']}")
+            send_telegram_message(
+                f"❗️ Error launching instance on {ad}: <code>{data['code']}</code>\n"
+                f"Status: {data['status']}\n"
+                f"Message: {data['message']}"
+            )
 
         if not instance_exist_flag:
             print(f"All ADs tried. Waiting {WAIT_TIME}s before restarting cycle...")
