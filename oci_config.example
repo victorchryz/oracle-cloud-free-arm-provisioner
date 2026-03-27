@@ -1,0 +1,6 @@
+[DEFAULT]
+user=ocid1.user.oc1..your_user_ocid
+fingerprint=xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx
+tenancy=ocid1.tenancy.oc1..your_tenancy_ocid
+region=us-ashburn-1
+key_file=/app/oci_api_private_key.pem

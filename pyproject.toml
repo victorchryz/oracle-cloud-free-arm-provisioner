@@ -1,0 +1,16 @@
+[project]
+name = "oracle-cloud-free-arm-provisioner"
+version = "1.0.0"
+description = "Oracle Cloud Free Tier ARM instance provisioning with Telegram notifications"
+requires-python = ">=3.8"
+dependencies = [
+    "oci>=2.100.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.28.0",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+ignore_missing_imports = true

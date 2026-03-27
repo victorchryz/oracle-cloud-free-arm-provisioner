@@ -1,0 +1,11 @@
+services:
+  oracle-freetier:
+    build: .
+    volumes:
+      - ./oci.env:/app/oci.env:ro,z
+      - ./oci_config:/app/oci_config:ro,z
+      - ./oci_api_private_key.pem:/app/oci_api_private_key.pem:ro,z
+      - ./ssh_public_key.pub:/app/ssh_public_key.pub:ro,z
+    environment:
+      - OCI_ENV_FILE=/app/oci.env
+    restart: on-failure
